@@ -4,25 +4,40 @@ import java.lang.StringBuilder;
 import java.util.HashSet;
 import java.util.stream.*;
 import java.util.regex.*;
+import java.util.HashMap;
 
 public class Wordle{
     public static void main(String[]args){
-        String mystery = "disco";
-        WordList test = new WordList();
+        if (args.length < 1){ // error checking arg
+            System.out.println("Please provide an argument");
+            return;
+        }
+        if (args[0].length() != 5){ // error checking arg
+            System.out.println("Please provide a valid 5-letter word");
+            return;
+        }
+
+        String mystery = args[0];
+        WordList test = new WordList(); // pulling full list of valid words from WordList class
         List<String> lst = test.getList();
 
+        if (!lst.contains(args[0])){ // error checking arg
+            System.out.println("Please provide a valid 5-letter word");
+            return;
+        }
+
         List<String> tst = lst;
-        for (int i = 0; i < 5; i++){
-            String guess = "";
+        String guess;
+        for (int i = 0; i < 5; i++){ // allowing six guesses
             if (i == 0){
-                guess = "adieu";
+                guess = "adieu"; // starting guess, change as wanted
             }else{
                 int len = tst.size();
-                int rand = (int) Math.ceil(Math.random() * len) - 1;
+                int rand = (int) Math.ceil(Math.random() * len) - 1; // generating rand from list
                 guess = tst.get(rand);
             }
-            String combo = guess(mystery, guess);
-            if (combo.equals("WIN")){
+            String combo = guess(mystery, guess); 
+            if (combo.equals("WIN")){ // WIN case
                 System.out.println(guess);
                 System.out.println("You Win!");
                 break;
@@ -30,7 +45,7 @@ public class Wordle{
             tst.remove(guess);
             System.out.println(guess);
             System.out.println(combo);
-            tst = alterList(lst, combo, guess);
+            tst = alterList(tst, combo, guess); // no win, remove all invalid words by new rules
         }
       //  for (String word : tst){
       //      System.out.println(word);
@@ -61,7 +76,7 @@ public class Wordle{
     public static List<String> alterList(List<String> lst, String combo, String guess){
         StringBuilder regex = new StringBuilder();
         List<Character> block = new ArrayList<>();
-        List<Character> contain = new ArrayList<>();
+        HashMap<Character, Integer> contain = new HashMap<>();
         for (int i = 0; i < combo.length(); i++){
             if (combo.charAt(i) == 'G'){
                 regex.append(guess.charAt(i));
@@ -70,7 +85,7 @@ public class Wordle{
                 block.add(guess.charAt(i));
             }else if (combo.charAt(i) == 'Y'){
                 regex.append('.');
-                contain.add(guess.charAt(i));
+                contain.put(guess.charAt(i), i);
             }
         }
 
@@ -80,8 +95,8 @@ public class Wordle{
             if (!word.matches(pat)){
                 continue outer;
             }
-            for (Character ch : contain){
-                if (word.indexOf(ch) == -1){
+            for (Character ch : contain.keySet()){
+                if (word.indexOf(ch) == -1 || word.indexOf(ch) == contain.get(ch)){
                     continue outer;
                 }
             }
